@@ -1,4 +1,4 @@
-'''Process Strava FIT files into grid of routes'''
+'''Process Strava FIT files to GPX files.'''
 from fit2gpx import StravaConverter
 
 DIR_STRAVA = 'data'

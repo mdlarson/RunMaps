@@ -1,9 +1,11 @@
 '''Process Strava FIT files to GPX files.'''
 import logging
+import warnings
 from fit2gpx import StravaConverter
 
 # set up logging
 logging.basicConfig(level=logging.INFO)
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 def convert_fit_to_gpx(input_dir, output_dir):

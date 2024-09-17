@@ -26,6 +26,7 @@ def get_lat_lon_points(file_path):
 
 def plot_routes_for_date(date, gpx_files, output_folder):
     '''Plot all routes for a given date and save as SVG.'''
+    svg_files = []  # list to collect generated SVG files
     try:
         plt.figure(figsize=(10, 10))
 
@@ -44,10 +45,13 @@ def plot_routes_for_date(date, gpx_files, output_folder):
         output_file = os.path.join(output_folder, f'{date}.svg')
         plt.savefig(output_file, format='svg', transparent=True,
                     bbox_inches='tight', pad_inches=0)
+
+        svg_files.append(output_file)
         plt.clf()
         plt.close()
     finally:
         plt.close('all')  # close all plots in case of error
+    return svg_files
 
 
 def group_gpx_files_by_date(input_dir):

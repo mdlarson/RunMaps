@@ -3,12 +3,21 @@ import logging
 import os
 from collections import defaultdict
 import matplotlib.pyplot as plt
+import numpy as np
 import gpxpy
-from datetime import datetime
 
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
+
+
+def downsample_lat_lon(latitudes, longitudes, N=5):
+    '''Downsample GPS data for faster processing.'''
+    latitudes = np.array(latitudes)
+    longitudes = np.array(longitudes)
+    # keep every Nth point
+    logging.info("Downsampling GPS points for file.")
+    return latitudes[::N], longitudes[::N]
 
 
 def get_lat_lon_points(file_path):
@@ -21,7 +30,7 @@ def get_lat_lon_points(file_path):
                 for point in segment.points:
                     latitudes.append(point.latitude)
                     longitudes.append(point.longitude)
-    return latitudes, longitudes
+    return downsample_lat_lon(latitudes, longitudes)
 
 
 def plot_routes_for_date(date, gpx_files, output_folder):

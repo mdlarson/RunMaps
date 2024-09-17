@@ -1,4 +1,4 @@
-'''Process GPX files to draw SVG image of each day's routes.'''
+'''Process GPX files to draw image of each day's routes.'''
 import logging
 import os
 from collections import defaultdict
@@ -11,7 +11,7 @@ import gpxpy
 logging.basicConfig(level=logging.INFO)
 
 
-def downsample_lat_lon(latitudes, longitudes, N=5):
+def downsample_lat_lon(latitudes, longitudes, N=10):
     '''Downsample GPS data for faster processing.'''
     latitudes = np.array(latitudes)
     longitudes = np.array(longitudes)
@@ -34,33 +34,34 @@ def get_lat_lon_points(file_path):
 
 
 def plot_routes_for_date(date, gpx_files, output_folder):
-    '''Plot all routes for a given date and save as SVG.'''
-    svg_files = []  # list to collect generated SVG files
+    '''Plot all routes for a given date and save image.'''
+    png_files = []
+
     try:
         plt.figure(figsize=(10, 10))
 
         for gpx_file in gpx_files:
-            logging.info("Drawing SVG for %s.", gpx_file)
+            logging.info("Drawing route for %s.", gpx_file)
             latitudes, longitudes = get_lat_lon_points(gpx_file)
             plt.plot(longitudes, latitudes, marker='o',
-                     linestyle='-', color='orange', markersize=3)
+                     linestyle='-', color='orange', markersize=10, linewidth=10)
 
         # style preferences
         plt.axis(False)  # disable axis and labels
         plt.gca().set_facecolor('none')  # transparent background
         plt.grid(False)
 
-        # save SVG for the date
-        output_file = os.path.join(output_folder, f'{date}.svg')
-        plt.savefig(output_file, format='svg', transparent=True,
+        # save image for the date
+        output_file = os.path.join(output_folder, f'{date}.png')
+        plt.savefig(output_file, format='png', transparent=True,
                     bbox_inches='tight', pad_inches=0)
 
-        svg_files.append(output_file)
+        png_files.append(output_file)
         plt.clf()
         plt.close()
     finally:
         plt.close('all')  # close all plots in case of error
-    return svg_files
+    return png_files
 
 
 def group_gpx_files_by_date(input_dir):
@@ -92,13 +93,12 @@ def get_first_timestamp(file_path):
 
 if __name__ == '__main__':
     # Define input/output directories
-    # gpx_file_path = 'data/activities_gpx/9282480094.gpx'
     GPX_DIR = 'data/activities_gpx'
     OUTPUT_DIR = 'output'
 
     grouped_files = group_gpx_files_by_date(GPX_DIR)
 
     for date, files in grouped_files.items():
-        logging.info("Drawing SVGs for %s...", date)
+        logging.info("Drawing route images for %s...", date)
         plot_routes_for_date(date, files, OUTPUT_DIR)
-        logging.info("SVGs for %s complete.", date)
+        logging.info("Route image for %s complete.", date)

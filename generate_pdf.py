@@ -50,8 +50,29 @@ def draw_calendar_with_routes(output_pdf, grouped_files):
                 svg_files = grouped_files[week_start]
                 x = margin + day_of_week * cell_width
                 y = 17 * inch - margin - week_num * cell_height
+
                 for svg_file in svg_files:
+                    # convert SVG to drawing object
                     drawing = svg2rlg(svg_file)
+
+                    # Debug: Print original dimensions
+                    print(f"Processing {svg_file}")
+                    print(
+                        f"Original width: {drawing.width}, Original height: {drawing.height}")
+
+                    # calculate scale factors based on cell size
+                    orig_width = drawing.width
+                    orig_height = drawing.height
+                    scale_x = cell_width / orig_width
+                    scale_y = cell_height / orig_height
+                    scale_factor = min(scale_x, scale_y)
+
+                    # apply scaling to drawing
+                    drawing.width = orig_width * scale_factor
+                    drawing.height = orig_height * scale_factor
+                    drawing.scale(scale_factor, scale_factor)
+
+                    # draw scaled SVG on PDF canvas
                     renderPDF.draw(drawing, c, x, y)
     # draw grid
     draw_grid(c, margin, cell_width, cell_height)

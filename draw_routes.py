@@ -3,12 +3,21 @@ import logging
 import os
 from collections import defaultdict
 import matplotlib.pyplot as plt
+import numpy as np
 import gpxpy
-from datetime import datetime
 
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
+
+
+def downsample_lat_lon(latitudes, longitudes, N=5):
+    '''Downsample GPS data for faster processing.'''
+    latitudes = np.array(latitudes)
+    longitudes = np.array(longitudes)
+    # keep every Nth point
+    logging.info("Downsampling GPS points for file.")
+    return latitudes[::N], longitudes[::N]
 
 
 def get_lat_lon_points(file_path):
@@ -21,11 +30,12 @@ def get_lat_lon_points(file_path):
                 for point in segment.points:
                     latitudes.append(point.latitude)
                     longitudes.append(point.longitude)
-    return latitudes, longitudes
+    return downsample_lat_lon(latitudes, longitudes)
 
 
 def plot_routes_for_date(date, gpx_files, output_folder):
     '''Plot all routes for a given date and save as SVG.'''
+    svg_files = []  # list to collect generated SVG files
     try:
         plt.figure(figsize=(10, 10))
 
@@ -44,10 +54,13 @@ def plot_routes_for_date(date, gpx_files, output_folder):
         output_file = os.path.join(output_folder, f'{date}.svg')
         plt.savefig(output_file, format='svg', transparent=True,
                     bbox_inches='tight', pad_inches=0)
+
+        svg_files.append(output_file)
         plt.clf()
         plt.close()
     finally:
         plt.close('all')  # close all plots in case of error
+    return svg_files
 
 
 def group_gpx_files_by_date(input_dir):

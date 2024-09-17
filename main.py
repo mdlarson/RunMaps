@@ -15,12 +15,14 @@ def main():
     grouped_files = group_gpx_files_by_date(dir_gpx)
     dir_svg = 'output'
 
+    svg_files_grouped_by_date = {}
     for date, files in grouped_files.items():
-        plot_routes_for_date(date, files, dir_svg)
+        svg_files = plot_routes_for_date(date, files, dir_svg)
+        svg_files_grouped_by_date[date] = svg_files
 
     # 3. Create PDF from SVGs
     output_pdf = 'route-calendar.pdf'
-    draw_calendar_with_routes(output_pdf, grouped_files)
+    draw_calendar_with_routes(output_pdf, svg_files_grouped_by_date)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 '''Lay out SVG images in grid and generate PDF.'''
 import logging
 from datetime import datetime
+from reportlab.lib import colors
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 from reportlab.graphics import renderPDF
@@ -16,6 +17,8 @@ def draw_grid(c, margin, cell_width, cell_height):
     '''Draw calendar grid and weekday labels.'''
     days_of_week = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
+    c.setFont('Lato', 11)
+
     # draw column labels
     for i, day in enumerate(days_of_week):
         x = margin + i * cell_width + 0.5 * cell_width
@@ -27,6 +30,8 @@ def draw_grid(c, margin, cell_width, cell_height):
         y = 17 * inch - margin - row * cell_height
         for col in range(7):
             x = margin + col * cell_width
+            c.setStrokeColor(colors.lightgrey)
+            c.setLineWidth(0.5)
             c.rect(x, y, cell_width, cell_height, stroke=1, fill=0)
 
 
@@ -34,9 +39,14 @@ def draw_calendar_with_routes(output_pdf, grouped_files):
     '''Lay out routes in a calendar grid and save as PDF.'''
     # set up canvas, margins, and grid
     c = canvas.Canvas(output_pdf, pagesize=(11 * inch, 17 * inch))
-    margin = 0.5 * inch
+    margin = 0.25 * inch
     cell_width = 1.5 * inch
     cell_height = 1.5 * inch
+
+    # draw grid
+    # draw_grid(c, margin, cell_width, cell_height)
+
+    y_start = 17 * inch - margin - cell_height  # Start after the top margin
 
     # determine year based on earliest file
     year = min(grouped_files.keys()).year
@@ -46,15 +56,39 @@ def draw_calendar_with_routes(output_pdf, grouped_files):
         for day_of_week in range(7):  # Sun = 0, Sat = 6
             week_start = datetime.strptime(
                 f"{year} {week_num} {day_of_week}", "%Y %W %w").date()
+
             if week_start in grouped_files:
                 svg_files = grouped_files[week_start]
-                x = margin + day_of_week * cell_width
-                y = 17 * inch - margin - week_num * cell_height
+                x = margin + (day_of_week * cell_width)
+                y = y_start - (week_num * cell_height)
+
                 for svg_file in svg_files:
-                    drawing = svg2rlg(svg_file)
+                    drawing = svg2rlg(svg_file)  # convert SVG to drawing
+
+                    # DEBUG: print original dimensions
+                    print(f"Processing {svg_file}")
+                    print(
+                        f"Original width: {drawing.width}, Original height: {drawing.height}")
+
+                    if drawing.width == 0 or drawing.height == 0:
+                        logging.warning(
+                            "SVG %s has 0 width/height; skipping.", svg_file)
+                        continue  # skip this SVG
+
+                    # calculate scale factors based on cell size
+                    orig_width = drawing.width
+                    orig_height = drawing.height
+                    scale_x = cell_width / orig_width
+                    scale_y = cell_height / orig_height
+                    scale_factor = min(scale_x, scale_y)
+
+                    # apply scaling to drawing
+                    drawing.width = orig_width * scale_factor
+                    drawing.height = orig_height * scale_factor
+                    drawing.scale(scale_factor, scale_factor)
+
+                    # draw scaled SVG on PDF canvas
                     renderPDF.draw(drawing, c, x, y)
-    # draw grid
-    draw_grid(c, margin, cell_width, cell_height)
     c.save()
 
 

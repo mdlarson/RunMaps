@@ -46,19 +46,24 @@ def draw_calendar_with_routes(output_pdf, grouped_files):
         for day_of_week in range(7):  # Sun = 0, Sat = 6
             week_start = datetime.strptime(
                 f"{year} {week_num} {day_of_week}", "%Y %W %w").date()
+
             if week_start in grouped_files:
                 svg_files = grouped_files[week_start]
                 x = margin + day_of_week * cell_width
                 y = 17 * inch - margin - week_num * cell_height
 
                 for svg_file in svg_files:
-                    # convert SVG to drawing object
-                    drawing = svg2rlg(svg_file)
+                    drawing = svg2rlg(svg_file)  # convert SVG to drawing
 
-                    # Debug: Print original dimensions
+                    # DEBUG: print original dimensions
                     print(f"Processing {svg_file}")
                     print(
                         f"Original width: {drawing.width}, Original height: {drawing.height}")
+
+                    if drawing.width == 0 or drawing.height == 0:
+                        logging.warning(
+                            "SVG %s has 0 width/height; skipping.", svg_file)
+                        continue  # skip this SVG
 
                     # calculate scale factors based on cell size
                     orig_width = drawing.width

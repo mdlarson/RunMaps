@@ -21,8 +21,9 @@ def main():
         img_files_grouped_by_date[date] = img_files
 
     # 3. Create PDF from images
-    output_pdf = 'route-calendar.pdf'
-    draw_calendar_with_routes(output_pdf, img_files_grouped_by_date)
+    year = 2024
+    output_pdf = f'route-calendar-{2024}.pdf'
+    draw_calendar_with_routes(output_pdf, dir_img, year)
 
 
 if __name__ == '__main__':

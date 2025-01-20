@@ -34,33 +34,52 @@ def get_lat_lon_points(file_path):
 
 
 def plot_routes_for_date(date, gpx_files, output_folder):
-    '''Plot all routes for a given date and save image.'''
+    '''Plot all routes for a given date and save square images without distortion.'''
     png_files = []
 
     try:
-        plt.figure(figsize=(10, 10))
+        # Create a new figure
+        fig, ax = plt.subplots()
 
+        all_latitudes, all_longitudes = [], []
         for gpx_file in gpx_files:
             logging.info("Drawing route for %s.", gpx_file)
             latitudes, longitudes = get_lat_lon_points(gpx_file)
-            plt.plot(longitudes, latitudes, marker='o',
-                     linestyle='-', color='orange', markersize=10, linewidth=10)
+            all_latitudes.extend(latitudes)
+            all_longitudes.extend(longitudes)
+            ax.plot(longitudes, latitudes, marker='o',
+                    linestyle='-', color='orange', markersize=5, linewidth=2)
 
-        # style preferences
-        plt.axis(False)  # disable axis and labels
-        plt.gca().set_facecolor('none')  # transparent background
-        plt.grid(False)
+        # Ensure the aspect ratio is equal for true-to-life representation
+        ax.set_aspect('equal', adjustable='datalim')
 
-        # save image for the date
+        # Add some padding around the plotted data
+        if all_latitudes and all_longitudes:
+            lat_margin = (max(all_latitudes) - min(all_latitudes)) * 0.1  # 10% margin
+            lon_margin = (max(all_longitudes) - min(all_longitudes)) * 0.1  # 10% margin
+            ax.set_xlim(min(all_longitudes) - lon_margin, max(all_longitudes) + lon_margin)
+            ax.set_ylim(min(all_latitudes) - lat_margin, max(all_latitudes) + lat_margin)
+
+        # Remove axes and background
+        ax.axis(False)
+        ax.set_facecolor('none')
+
+        # Ensure the output is a square image
+        fig.set_size_inches(10, 10)  # Force the figure to be square
+        ax_position = ax.get_position()
+        ax.set_position([0, 0, 1, 1])  # Make the plot fill the entire figure
+
+        # Save the image as a square
         output_file = os.path.join(output_folder, f'{date}.png')
-        plt.savefig(output_file, format='png', transparent=True,
+        fig.savefig(output_file, format='png', transparent=True,
                     bbox_inches='tight', pad_inches=0)
-
         png_files.append(output_file)
-        plt.clf()
-        plt.close()
+
+        plt.close(fig)
+    except Exception as e:
+        logging.error(f"Error processing routes for {date}: {e}")
     finally:
-        plt.close('all')  # close all plots in case of error
+        plt.close('all')  # Ensure all plots are closed
     return png_files
 
 
